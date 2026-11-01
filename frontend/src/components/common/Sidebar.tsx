@@ -88,7 +88,7 @@ export const Sidebar: React.FC = () => {
   const navContent = (
     <div className="flex flex-col h-full select-none py-4">
       {/* Scope info */}
-      <div className="px-4 pb-3 mb-2 border-b border-slate-100">
+      <div className="px-5 pb-3 mb-2 border-b border-slate-100">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
           Current Organization
         </span>
@@ -98,28 +98,30 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 px-3 space-y-0.5">
+      <nav className="flex-1 px-3 space-y-1">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
             <button
               key={item.id}
               onClick={() => handleSelectTab(item.id)}
-              className={`w-full text-left px-3 py-2.5 sm:py-2 rounded-md flex items-center justify-between text-xs font-medium transition ${
+              className={`w-full text-left px-3 py-2 rounded-md flex items-center justify-between text-xs font-medium transition ${
                 isActive
-                  ? 'bg-slate-100 text-slate-900 font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-slate-900 text-white font-semibold shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className={isActive ? 'text-slate-900' : 'text-slate-400'}>
+                <span className={isActive ? 'text-amber-400' : 'text-slate-400'}>
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
               </div>
 
               {item.count !== undefined && (
-                <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${item.badgeColor || 'bg-slate-100 text-slate-600'}`}>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
+                  isActive ? 'bg-slate-800 text-slate-200' : item.badgeColor || 'bg-slate-100 text-slate-600'
+                }`}>
                   {item.count}
                 </span>
               )}
@@ -129,7 +131,7 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Clean footer */}
-      <div className="px-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
+      <div className="px-5 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
         AICTE Approval Process Handbook
       </div>
     </div>
@@ -137,8 +139,8 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-60 bg-white border-r border-slate-200 flex-col shrink-0">
+      {/* Desktop Sidebar (Aligned to w-64 matching header) */}
+      <aside className="hidden md:flex md:w-64 bg-white border-r border-slate-200 flex-col shrink-0 min-h-[calc(100vh-64px)]">
         {navContent}
       </aside>
 
