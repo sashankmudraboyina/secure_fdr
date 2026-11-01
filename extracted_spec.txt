@@ -1,0 +1,1014 @@
+SECUREFDR 360
+Prototype Development Specification
+AI-powered • Blockchain-enabled • Bank-attested • Policy-driven
+SMART INDIA HACKATHON 2026
+Problem Statement ID: 26265
+Organization: AICTE  |  Department: Regulation Bureau  |  Theme: Smart Automation
+DEVELOPER HANDOFF FOR ANTIGRAVITY
+Build the working prototype in small, testable phases. Do not deliver only mockups or a design plan.
+Version 1.0  |  31 October 2026
+How to use this document
+This document is the single source of implementation requirements for building the SecureFDR 360 SIH prototype. Give this DOCX to Antigravity as the project specification. The agent should read it completely, inspect the existing workspace, implement the application in phases, run the tests after each phase and keep the project runnable throughout.
+Mandatory instruction to the coding agent
+Build a functioning full-stack prototype, not just a UI mockup. Do not skip backend persistence, role checks, document upload, discrepancy logic, bank sandbox, release workflow or ledger integration. If a feature depends on unavailable external credentials, implement a clearly labelled local simulator and document the limitation. Never present simulated bank data as a real bank confirmation.
+Project quick facts
+Item
+Decision
+Product
+SecureFDR 360 — AICTE Financial Instrument Assurance & Regulatory Intelligence Platform
+Problem statement
+SIH 26265 — Streamline of security deposit / FDR portal
+Primary outcome
+A centralized, auditable FDR lifecycle portal with evidence provenance, bank verification simulation and policy-driven release workflow.
+Primary prototype users
+Institution user, AICTE reviewer, AICTE approver, bank verifier, administrator and auditor.
+Prototype data
+Synthetic institutions, synthetic FDRs, synthetic bank attestations and illustrative policy rules only.
+Blockchain
+Hyperledger Fabric local test network; Node.js/TypeScript Gateway service; JavaScript chaincode.
+Backend
+Python 3.11+ and FastAPI.
+Frontend
+React + TypeScript + Vite.
+Database
+PostgreSQL.
+Document storage
+Local development storage behind a storage service; optional MinIO.
+Prototype integration boundary
+No live AICTE, bank, NeSL or DigiLocker integration unless official credentials and permission are supplied.
+Build order at a glance
+Phase
+Build objective
+Must be demonstrable
+0
+Inspect workspace and lock architecture
+Project plan, environment check, repository structure
+1
+Scaffold frontend/backend/database
+Application boots locally
+2
+Authentication, roles and seed data
+Role-specific logins and access restrictions
+3
+Institution and FDR lifecycle
+Create, upload, list and view instruments
+4
+Document intelligence
+Extract fields and flag mismatches
+5
+Bank sandbox and attestations
+Bank portal confirms or rejects test FDR
+6
+Fabric ledger and smart contract
+Ledger transactions and history visible
+7
+Duplicate/collateral intelligence
+Potential duplicate and replacement conflicts flagged
+8
+Policy and release workflow
+Clearances, revalidation and controlled approval
+9
+Alerts, dashboards and reports
+Maturity alerts and management overview
+10
+Security, tests and demo hardening
+Acceptance criteria pass; README is complete
+1. Product vision and problem definition
+AICTE needs a centralized mechanism to maintain institution-wise and instrument-wise records of security deposits and FDRs, review submitted documents, obtain independent verification wherever available, monitor maturity and validity, track replacement instruments, coordinate release/refund requests and preserve a traceable administrative history.
+SecureFDR 360 should move beyond simple file storage. The prototype demonstrates four connected ideas: (1) a Digital Deposit Passport for each instrument, (2) independent bank attestations through a sandbox, (3) a permissioned blockchain trust ledger for tamper-evident evidence events, and (4) a policy-aware release workflow that retains human approval authority.
+1.1 Product principles
+Bank facts and institution declarations must remain separate. OCR output is extracted evidence, not proof of authenticity.
+Blockchain records evidence provenance and lifecycle events; it does not independently prove that an uploaded claim is true.
+No sensitive document, account number, personal identifier or full FDR number should be written to public/shared ledger state.
+AI may extract, compare, summarize and prioritize. Deterministic backend rules must govern required fields, state transitions and release gates.
+Final approval or rejection remains with the authorized AICTE official. No autonomous AI release decision.
+All prototype data must be synthetic and visibly marked as demo data.
+Any AICTE regulatory rule values supplied as seed data must be labelled illustrative until confirmed by AICTE.
+1.2 Prototype boundaries
+In scope for SIH prototype
+Out of scope unless access is provided
+Full role-based web portal; instrument repository; PDF/image upload; OCR and field extraction; discrepancy detection; bank verification simulator; Fabric local test network; immutable lifecycle events; replacement lineage; duplicate detection; configurable demo policy; release workflow; alerts; dashboard; audit explorer; tests and README.
+Live bank APIs; actual AICTE portal integration; real PGRC/Vigilance connectivity; official DSC infrastructure; real DigiLocker integration; production bank keys; production cloud deployment; legal determination of release eligibility; actual fund transfer.
+Non-negotiable terminology
+In the UI use “Bank Sandbox — simulated” for test attestations. Use “Bank confirmed” only for an authenticated bank response within the prototype’s controlled test network, and always display “Synthetic demo environment”. Do not imply a live bank connection.
+2. Users, roles and permissions
+Role
+Can do
+Must not do
+Institution User
+View own institution; create FDR submission; upload supporting documents; view OCR extraction and discrepancies; respond to clarification; submit renewal/replacement details; initiate release request; view own notifications.
+View other institutions; edit bank attestation; approve own FDR; alter audit or ledger history.
+AICTE Reviewer
+View assigned cases; inspect documents; compare declared/extracted/bank data; create scrutiny notes; request clarification; mark preliminary checks; assign clearance tasks.
+Submit bank attestation; approve final release unless also explicitly assigned approver role.
+AICTE Approver
+Review release readiness; inspect required clearances and latest bank verification; approve/reject release; enter reason; record authorization.
+Approve when required clearances are missing, bank confirmation is stale/negative or policy checks fail.
+Bank Verifier
+View verification requests routed to the verifier’s bank; confirm, reject or flag instrument fields; submit digitally signed sandbox response.
+View unrelated institution records or change AICTE administrative status.
+Administrator
+Manage demo users, institutions, bank master data, configurable reminder settings and illustrative policy rules; seed/reset demo data.
+Edit or delete append-only audit/ledger events; impersonate bank responses without a sandbox label.
+Auditor
+Read-only view of instrument timeline, bank attestation evidence references, release approvals and ledger transactions.
+Modify records, clearances, policies or attestations.
+Enforce permissions in the FastAPI backend on every protected endpoint. Hiding buttons in React is not security. Institution access must be scoped by institution_id. Bank access must be scoped by bank_id. Reviewer and approver permissions must be separate permission flags even if a demo user has both roles.
+2.1 Demo accounts
+Seed at least one account for each role. Use obvious demo-only credentials, show a “Demo environment” banner, and force no production-like assumptions. A single documented demo password may be used for local judging only; hash it in the database and never commit production secrets.
+Demo user
+Role
+Sample identity
+institution.demo@securefdr.local
+Institution User
+VNR Demo Institute; PID DEMO-AICTE-0001
+reviewer.demo@securefdr.local
+AICTE Reviewer
+AICTE Review Desk
+approver.demo@securefdr.local
+AICTE Approver
+AICTE Approval Desk
+bank.demo@securefdr.local
+Bank Verifier
+Demo National Bank
+admin.demo@securefdr.local
+Administrator
+System Administrator
+auditor.demo@securefdr.local
+Auditor
+Read-only Audit Desk
+3. Core user journeys and business workflows
+3.1 New FDR submission
+1. Institution user signs in and opens “Add Financial Instrument”.
+2. User selects the security-deposit obligation (or creates a draft obligation reference if demo rules allow), enters declared details and uploads an FDR PDF or image.
+3. Backend validates file type/size, stores the original securely, calculates SHA-256, creates a document record and creates a unique instrument ID such as AICTE-FDR-2026-000184.
+4. Document service extracts text from searchable PDF first; if no useful text exists, it runs OCR. It returns extracted fields and confidence values.
+5. Comparison service checks institution-declared values against extracted values and generates discrepancy records.
+6. Duplicate service generates a privacy-preserving HMAC fingerprint from normalized issuing bank code + FDR reference + instrument issue date (configurable), and checks if it already exists.
+7. Instrument enters SUBMITTED or NEEDS_CLARIFICATION state. It is not marked bank verified.
+8. Backend records an instrument-created event and document hash in the ledger adapter; when Fabric is connected, the event must be committed to Fabric.
+3.2 Bank verification
+1. AICTE reviewer clicks “Request bank verification”. The backend creates a bank verification request with a unique request ID and selected fields to confirm.
+2. Bank verifier signs in to the Bank Sandbox and views only requests for its bank.
+3. Bank verifier inspects the synthetic bank record and selects a result: ACTIVE_AND_LIEN_CONFIRMED, ACTIVE_LIEN_MISMATCH, NOT_FOUND, CLOSED_OR_ENCASHED, MATURITY_MISMATCH or NEEDS_MANUAL_REVIEW.
+4. Bank sandbox creates a response payload containing request ID, instrument reference, confirmed fields, status, verified_at, nonce and key_id. It signs canonical JSON using a development private key.
+5. Backend verifies the signature against the registered demo public key, validates nonce and request freshness, compares confirmed values with submitted/extracted values and saves the attestation.
+6. Backend sends the attestation digest and status event to Fabric through the Gateway service. UI displays “Bank Sandbox — simulated” even though the signature and ledger transaction are technically validated.
+3.3 Discrepancy handling
+A discrepancy is a review flag, not an accusation of fraud. Each discrepancy must store field name, source A, source B, severity, explanation, current status (OPEN / UNDER_REVIEW / RESOLVED / ACCEPTED_WITH_REASON) and resolution actor. Never auto-reject an institution solely because OCR confidence is low.
+3.4 Maturity and status monitoring
+A scheduled job checks instrument maturity dates daily. Prototype reminder offsets should be configurable (default demo values: 90, 60, 30 and 7 days before maturity, plus overdue). Do not hardcode these as official AICTE timelines. On each alert, create an in-app notification and a dashboard item. If an authenticated bank sandbox event reports closure/encashment or lien change, create a high-priority discrepancy and append a ledger event.
+3.5 Replacement instrument
+1. Institution opens an existing instrument and selects “Submit replacement”.
+2. New instrument goes through the same upload, OCR, comparison and bank-verification flow.
+3. After reviewer confirmation, create a relationship record from old instrument to new instrument with reason and supporting evidence.
+4. Old instrument becomes SUPERSEDED only after the configured acceptance gate; never delete it or erase its history.
+5. Prevent circular replacement chains and prevent more than one current instrument for the same deposit obligation, unless the configured policy explicitly supports multiple instruments.
+3.6 Release/refund request
+1. Institution selects an eligible instrument and starts a release request, uploads required supporting documents and provides a reason.
+2. Policy engine evaluates configured demo rules and outputs PASS / FAIL / NEEDS_HUMAN_REVIEW per check, including a reason and policy version.
+3. AICTE reviewer reviews the documents and creates required clearance tasks (for example PGRC, Vigilance, Approval Bureau or other configurable authority). The exact list must be configurable, not hardcoded as universally applicable.
+4. Clearance owners complete tasks with a result, note and evidence attachment. Each task is attributable and timestamped.
+5. When all mandatory clearances are complete, request a fresh bank status verification. The release process must stop if the bank reports closed/encashed, lien mismatch, not found or stale/unknown status.
+6. If all configured gates pass, case enters READY_FOR_APPROVAL. A separate AICTE approver reviews and explicitly approves or rejects with a reason.
+7. Approval records release authorization only. Do not simulate transfer of money. Mark COMPLETED only after an authorized completion/closure action is recorded.
+8. Write relevant lifecycle, clearance and approval events to the ledger and append-only audit log.
+4. Instrument state model and rule logic
+4.1 Keep administrative and bank states separate
+Do not represent everything with one overloaded status. Store at least two status dimensions: (A) AICTE administrative record state and (B) latest bank-confirmed instrument state. The UI must show both separately.
+Administrative record state
+Meaning
+DRAFT
+Institution is editing a submission; not submitted.
+SUBMITTED
+Institution submitted the record; review has not completed.
+UNDER_REVIEW
+AICTE reviewer is examining the record.
+NEEDS_CLARIFICATION
+Institution must provide correction or additional evidence.
+ACCEPTED
+Administrative review accepted the submitted record; this does not by itself mean the bank status is live-verified.
+REJECTED
+AICTE reviewer/authority rejected the submission with a reason.
+SUPERSEDED
+This instrument was replaced by another accepted instrument.
+RELEASE_IN_PROGRESS
+A release case is underway.
+RELEASED
+Release was formally authorized and completed in the prototype workflow.
+CLOSED
+Instrument is closed/encashed according to a bank response or authorized record.
+Bank status
+Meaning
+NOT_REQUESTED
+No bank verification request exists.
+PENDING
+Verification requested; bank response pending.
+ACTIVE_LIEN_CONFIRMED
+Bank sandbox independently attested ACTIVE and required lien.
+ACTIVE_LIEN_MISMATCH
+Bank says active but lien/beneficiary does not match expected details.
+NOT_FOUND
+Bank sandbox cannot find the instrument.
+CLOSED_OR_ENCASHED
+Bank sandbox reports closed or encashed.
+MATURITY_MISMATCH
+Bank-confirmed maturity differs from submitted record.
+EXPIRED_OR_MATURED
+The relevant maturity date has passed; this is a bank/date status, not an automatic release approval.
+UNKNOWN_OR_STALE
+No reliable current confirmation; verification is stale or unavailable.
+4.2 Release case states
+State
+Transition condition
+DRAFT
+Institution is preparing a release request.
+SUBMITTED
+Institution submits request and required fields.
+DOCUMENT_CHECK
+System/reviewer checks required documents.
+CLEARANCE_PENDING
+One or more configured clearance tasks remain open.
+BANK_REVALIDATION_PENDING
+Mandatory clearances complete; fresh bank confirmation requested.
+READY_FOR_APPROVAL
+All configured gates pass and approver may review.
+APPROVED
+Authorized AICTE approver approves with reason and evidence.
+REJECTED
+Authorized reviewer/approver rejects with reason.
+COMPLETED
+Release closure action recorded; no money movement is simulated.
+4.3 Policy engine design
+Keep policy rules as versioned JSON/relational records with rule_code, title, applicable institution category, effective_from, effective_to, version, enabled flag and rule_parameters JSON.
+For the prototype, seed clearly illustrative rules only. Do not hardcode values or claim they are official AICTE rules.
+Each evaluation must save the exact policy version, inputs snapshot hash, individual checks, result, explanation and evaluation timestamp.
+Rule engine output must be explainable: “FAIL — bank lien is not confirmed” rather than only a numeric score.
+An override requires a designated authority, a mandatory reason and an audit event. Do not permit silent overrides.
+If a case cannot be evaluated confidently, return NEEDS_HUMAN_REVIEW, not PASS.
+5. Functional modules and acceptance criteria
+Module
+Required capabilities
+Acceptance criteria
+Authentication & RBAC
+Login/logout, password hashing, JWT, role and organization scope.
+Wrong password rejected; institution cannot access another institution; bank user cannot see unrelated bank requests; auditor is read-only.
+Institution registry
+Synthetic AICTE PID, institution name/category, trust/society and status.
+Only admin can manage demo master data; institution user sees its own profile.
+Deposit obligations
+Connect each FDR to a security-deposit obligation and configurable policy.
+An instrument can be linked to an obligation; obligation and policy version are visible.
+Document management
+Secure PDF/JPG/PNG upload, type/size validation, download permissions, checksum.
+Unsupported files rejected; authorized user can retrieve original; hash verification detects modified file.
+OCR & extraction
+Text PDF extraction, OCR fallback, normalized field extraction, confidence.
+Demo document produces fields; uncertain fields are shown for human review.
+Discrepancy engine
+Compare declared vs extracted vs bank-confirmed fields.
+Known mismatch fixtures generate the correct field-specific discrepancy.
+Bank sandbox
+Bank verification request, signed synthetic response, verifier portal.
+Signature valid/invalid cases supported; the UI never labels sandbox data as live.
+Blockchain ledger
+Create instrument, record attestation, status event, replacement, clearance, release authorization, history query.
+Fabric transaction IDs and event type are stored; invalid actor/invalid state changes rejected by chaincode.
+Collateral intelligence
+HMAC fingerprint, duplicate lookup, replacement links, cross-institution flags.
+Same synthetic FDR submitted twice flags a potential conflict; no automatic fraud accusation.
+Policy & release
+Configurable rules, tasks, approval gates, maker-checker-approver.
+Release cannot reach READY_FOR_APPROVAL with missing mandatory clearances or stale/negative bank status.
+Alerts & dashboard
+Maturity reminders, overdue notifications, pending counts, case filters.
+A seeded near-maturity FDR generates an alert; dashboards reflect database state.
+Audit & reports
+Actor, action, timestamp, before/after summary, ledger transaction reference.
+Important actions appear in timeline; audit page is read-only.
+Quality & docs
+Automated tests, README, .env.example, setup scripts, demo guide.
+A new developer can set up locally following README without undocumented steps.
+6. Technical architecture and stack
+Use a modular monorepo. Keep each concern behind a service interface so OCR provider, file storage, bank sandbox and ledger implementation can be replaced without rewriting business logic.
+Figure 1. Proposed SecureFDR 360 prototype architecture.
+Layer
+Technology
+Implementation notes
+Frontend
+React + TypeScript + Vite; Tailwind CSS; React Router; TanStack Query; React Hook Form + Zod; Lucide icons; Recharts.
+Build responsive role-aware screens. Use real API data. Avoid decorative buttons that do nothing.
+Backend API
+Python 3.11+; FastAPI; Pydantic; SQLAlchemy 2.x; Alembic.
+REST API under /api/v1. Separate routers, services, repositories and schemas.
+Database
+PostgreSQL.
+Persist users, institutions, obligations, instruments, documents, attestations, discrepancies, release cases, clearances, policies, notifications and audit events.
+OCR
+PyMuPDF first; Tesseract or PaddleOCR fallback.
+Use extraction adapters. Keep extracted data and confidence; do not invent missing fields.
+Document storage
+Local filesystem for prototype; optional MinIO.
+Store outside public web root; use a storage abstraction; return authorized download endpoint only.
+Blockchain
+Hyperledger Fabric v2.5 LTS test network for predictable prototype track; confirm compatibility at setup.
+Two organizations for demo: AICTE Org and Bank Org. Use Fabric test-network and chaincode.
+Fabric Gateway
+Node.js + TypeScript + @hyperledger/fabric-gateway.
+A separate small service connects the Fabric Gateway; FastAPI calls it over an internal REST interface.
+Chaincode
+JavaScript chaincode with Fabric Contract API.
+Enforce ledger state transitions and organization-level transaction permissions.
+Background jobs
+APScheduler for simplest prototype OR Celery + Redis if already set up.
+Run maturity reminders and escalation checks. Keep scheduler idempotent.
+Testing
+Pytest; Vitest/React Testing Library; Playwright for main E2E flow.
+Test backend rules and UI; include seed fixtures for mismatch scenarios.
+Deployment
+Docker Compose for app services; Fabric test-network scripts separately.
+Local developer setup must be documented. Keep Fabric optional for basic app boot, but required for blockchain demo.
+Important Fabric implementation choice
+Fabric client Gateway APIs are provided for Node.js, Go and Java. Keep the main business backend in FastAPI, but use a dedicated Node.js/TypeScript Fabric Gateway microservice. This avoids trying to use an unsupported or unofficial Python Fabric Gateway client. The Fabric Gateway docs describe submit/evaluate transactions and the official test network supports JavaScript/TypeScript chaincode.
+7. Monorepo structure
+securefdr-360/
+  README.md
+  .env.example
+  docker-compose.yml
+  docs/
+    ARCHITECTURE.md
+    API.md
+    DEMO_SCRIPT.md
+    SECURITY.md
+  frontend/
+    src/
+      app/                 # router, providers, route guards
+      components/          # shared UI components
+      features/
+        auth/
+        dashboard/
+        institutions/
+        instruments/
+        documents/
+        bank-verification/
+        discrepancies/
+        release-cases/
+        policies/
+        audit-ledger/
+        reports/
+      lib/                 # API client, formatters, schemas
+      types/
+  backend/
+    app/
+      main.py
+      api/v1/              # routers
+      core/                # settings, auth, permissions
+      db/                  # SQLAlchemy models/session
+      schemas/
+      services/
+        document_service.py
+        extraction_service.py
+        discrepancy_service.py
+        fingerprint_service.py
+        bank_verification_service.py
+        policy_service.py
+        release_service.py
+        notification_service.py
+        ledger_service.py
+      repositories/
+      workers/
+    alembic/
+    tests/
+  fabric/
+    test-network/          # documented setup or submodule reference
+    chaincode/securefdr/   # JavaScript chaincode
+    gateway-service/       # Node.js + TypeScript Fabric Gateway REST adapter
+    scripts/
+  storage/                 # local development uploads; gitignored
+  scripts/
+    dev-up.sh / dev-up.ps1
+    seed_demo.py
+    reset_demo.py
+The exact directory names may be adjusted to fit an existing repository, but keep responsibilities separated. Do not place all application logic in one large file.
+8. Database design
+Use UUID primary keys. Use timestamptz for timestamps and Decimal/Numeric for money. Store currency explicitly. Store uploaded documents outside the database and keep metadata/path/hash in PostgreSQL. Add created_at and updated_at to mutable records; append-only tables must not expose update/delete endpoints.
+Entity/table
+Key fields and relationships
+users
+id, email unique, password_hash, full_name, role, institution_id nullable, bank_id nullable, is_active, last_login_at.
+institutions
+id, aicte_pid unique, legal_name, trust_name, category, region, status.
+banks
+id, bank_code, name, ifsc_prefix/branch info for demo, public_key_pem, key_id, is_active.
+deposit_obligations
+id, institution_id, obligation_ref, description, category, required_amount, currency, policy_version_id, status.
+instruments
+id, instrument_code unique, institution_id, obligation_id, bank_id, encrypted/reference field, amount, currency, issue_date, maturity_date, depositor_name, lien_beneficiary, administrative_status, bank_status, last_bank_verified_at, current_flag.
+documents
+id, instrument_id nullable, release_case_id nullable, document_type, file_name, mime_type, size_bytes, storage_key, sha256, uploaded_by, extracted_json, created_at.
+bank_verification_requests
+id, instrument_id, bank_id, request_nonce, requested_fields_json, status, requested_by, requested_at, expires_at.
+bank_attestations
+id, request_id, instrument_id, bank_id, response_json, signature, key_id, signature_valid, result_status, verified_at, attestation_digest, ledger_tx_id.
+discrepancies
+id, instrument_id, field_name, source_a, source_b, severity, reason, status, resolved_by, resolution_note, resolved_at.
+instrument_relationships
+id, old_instrument_id, new_instrument_id, relationship_type, reason, evidence_document_id, created_by, created_at.
+release_cases
+id, case_number, instrument_id, institution_id, status, reason, policy_version_id, eligibility_result_json, submitted_at, final_decision_by, final_decision_at, decision_reason.
+clearance_tasks
+id, release_case_id, clearance_type, assigned_unit, status, assigned_to, response_note, evidence_document_id, completed_by, completed_at.
+policy_versions
+id, name, version, effective_from, effective_to, status, created_by, created_at.
+policy_rules
+id, policy_version_id, rule_code, title, applicability_json, parameters_json, mandatory, enabled.
+notifications
+id, recipient_user_id, type, title, message, resource_type, resource_id, read_at, created_at.
+ledger_events
+id, resource_type, resource_id, event_type, tx_id, block_number, payload_digest, actor_org, recorded_at, adapter_mode.
+audit_logs
+id, actor_user_id, action, resource_type, resource_id, before_summary_json, after_summary_json, ip_hint, created_at; append-only.
+8.1 Important data rules
+Instrument amount must be stored as numeric/Decimal, not float. Store currency code (default INR).
+Normalize FDR reference for comparison but preserve the original submitted reference in protected off-chain storage.
+Fingerprint must be generated server-side with HMAC-SHA-256 using a secret from environment variables. Do not expose the HMAC secret to frontend or write raw FDR reference to ledger.
+Document SHA-256 is calculated on original bytes at upload. Recalculate on download/verification where required.
+Each bank attestation must preserve the raw signed response and signature verification outcome off-chain; the ledger stores a digest/reference, not all banking information.
+All date-based jobs must use a consistent timezone setting (UTC in storage; display user local/Asia-Kolkata for this India prototype).
+Use soft delete only for operational master data if necessary. Do not delete financial evidence, audit records or ledger event references.
+9. API contract
+Prefix all endpoints with /api/v1. Use JSON for standard operations and multipart/form-data for file uploads. Return HTTP status codes consistently. Require Authorization: Bearer <JWT> for protected endpoints.
+Method and endpoint
+Purpose / access
+POST /auth/login
+Authenticate and return access token + user profile.
+GET /auth/me
+Return current user and permissions.
+GET /dashboard/summary
+Role-scoped KPI summary.
+GET /institutions
+List institutions; admin/reviewer/auditor only, scoped as appropriate.
+GET /institutions/me
+Institution user’s own institution.
+GET /obligations
+List obligations for current scope.
+POST /instruments
+Create draft instrument.
+GET /instruments
+Filter/search instruments by status, institution, bank, maturity.
+GET /instruments/{id}
+Instrument detail including passport timeline and evidence.
+POST /instruments/{id}/documents
+Upload FDR/supporting document.
+POST /instruments/{id}/submit
+Submit institution declaration.
+POST /instruments/{id}/request-bank-verification
+Create bank verification request.
+GET /bank/verification-requests
+Bank verifier sees only its bank’s requests.
+POST /bank/verification-requests/{id}/attest
+Submit signed synthetic bank attestation.
+GET /instruments/{id}/discrepancies
+List discrepancy flags.
+POST /discrepancies/{id}/resolve
+Reviewer resolves with note and reason.
+POST /instruments/{id}/replacement
+Create replacement instrument relationship.
+GET /release-cases
+List release cases for current role/scope.
+POST /release-cases
+Institution creates release request.
+POST /release-cases/{id}/submit
+Submit release request.
+POST /release-cases/{id}/clearances
+Reviewer creates/configures clearance tasks.
+POST /clearance-tasks/{id}/complete
+Authorized clearance user records outcome.
+POST /release-cases/{id}/evaluate
+Run policy engine; save explainable evaluation snapshot.
+POST /release-cases/{id}/revalidate-bank
+Request fresh bank status before approval.
+POST /release-cases/{id}/decision
+Approver approves/rejects with mandatory reason.
+GET /audit/events
+Auditor and authorized officers view append-only audit timeline.
+GET /ledger/instruments/{id}/history
+Fetch Fabric or fallback ledger history.
+POST /admin/policies
+Create a draft policy version; admin only.
+POST /admin/policies/{id}/activate
+Activate a policy version with audit entry; admin only.
+GET /notifications
+List notifications for current user.
+PATCH /notifications/{id}/read
+Mark notification read.
+9.1 API response shape
+{
+  "data": { "id": "...", "status": "SUBMITTED" },
+  "meta": { "request_id": "..." }
+}
+Error response:
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Maturity date must be after issue date.",
+    "details": [{"field": "maturity_date", "message": "Invalid date range."}]
+  }
+}
+9.2 Filtering and pagination
+Use limit/offset or cursor pagination consistently. Support q, status, bank_id, institution_id, maturity_from, maturity_to, overdue_only and sort parameters where applicable. Enforce data scope before returning results; do not rely on client-side filters.
+10. Document intelligence and discrepancy detection
+10.1 File handling
+Allow only PDF, JPG and PNG for the prototype. Reject executable, HTML, SVG and unknown MIME types.
+Prototype size limit: configurable, default 10 MB per file. Validate extension, MIME type and file signature/magic bytes.
+Generate random storage keys; never trust user-supplied path or filename for filesystem path creation.
+Store outside frontend static directory. Serve through authenticated API endpoint after permission check.
+Calculate SHA-256 at upload and store it with file metadata.
+If feasible, add antivirus scanning hook interface; if scanner is unavailable locally, document this as a production requirement.
+10.2 Extraction strategy
+Step
+Implementation
+1. Detect document
+Read file type, pages and size. Extract embedded text with PyMuPDF for PDF.
+2. OCR fallback
+If extracted text is empty/too short or page is image-only, render pages to images and use Tesseract or PaddleOCR.
+3. Normalize
+Normalize whitespace, dates, currency formatting, IFSC-like codes and FDR reference tokens. Preserve raw text separately.
+4. Extract fields
+Regex/rule-based extractors for bank name, IFSC/branch, FDR number, amount, issue date, maturity date, depositor, beneficiary/lien. Build per-field confidence.
+5. Human review
+Display editable extracted fields beside the original document. Mark low-confidence fields “Needs review”.
+6. Compare
+Compare declared vs extracted values; later compare both against bank-attested values.
+7. Save provenance
+Store extractor type/version, extraction timestamp and source document id.
+10.3 Discrepancy rules
+Rule code
+Condition
+Default severity
+AMOUNT_MISMATCH
+Declared amount differs from extracted or bank-confirmed amount beyond exact currency-normalized equality.
+HIGH
+FDR_REFERENCE_MISMATCH
+Declared normalized reference differs from extracted/bank reference.
+HIGH
+MATURITY_DATE_MISMATCH
+Declared maturity date differs from extracted or bank-confirmed date.
+HIGH
+BANK_MISMATCH
+Declared issuer differs from bank-confirmed issuer.
+HIGH
+LIEN_NOT_CONFIRMED
+Bank response does not confirm required lien beneficiary.
+CRITICAL
+BANK_STATUS_CLOSED
+Bank reports closed or encashed.
+CRITICAL
+DUPLICATE_FINGERPRINT
+Another instrument has same HMAC fingerprint.
+CRITICAL
+LOW_OCR_CONFIDENCE
+A required extracted field has confidence below configured threshold.
+MEDIUM
+DOCUMENT_HASH_MISMATCH
+Stored file bytes no longer match original checksum.
+CRITICAL
+Severity is a triage label only. The reviewer can investigate and resolve it with an auditable reason; do not display “fraud detected” as a conclusion.
+11. Blockchain trust ledger implementation
+11.1 What goes on-chain vs off-chain
+On-chain (minimal evidence)
+Off-chain (private operational data)
+Opaque instrument UUID; HMAC fingerprint token; document SHA-256; attestation digest; event type; status code; organization/MSP identity; Fabric transaction ID; timestamp; replacement relationship IDs; policy version reference; clearance/approval evidence digest.
+Original FDR PDF/image; full FDR number; account details; depositor personal data; bank response JSON; affidavits; emails; notes; detailed financial data; identity documents; extracted OCR text; private contact information.
+Privacy rule
+Do not put raw FDR numbers, bank account numbers, PAN, Aadhaar, depositor names, full documents or complete bank-response payloads on the ledger. A hash is a tamper-evidence mechanism, not a reason to publish sensitive source data.
+11.2 Network model for demo
+Fabric element
+Prototype configuration
+Network
+Use the official Fabric test-network for local development; do not call this a production consortium.
+Organization 1
+AICTEOrg — represents AICTE records and authorized review/approval transactions.
+Organization 2
+BankOrg — represents participating bank verification attestation transactions.
+Channel
+securefdr-channel (valid channel name; use a lowercase name).
+Chaincode
+securefdr, JavaScript chaincode with transaction functions below.
+Gateway service
+Node.js/TypeScript service using @hyperledger/fabric-gateway; separate from FastAPI.
+Identity permissions
+Chaincode reads client MSP ID. Only BankOrg identity may submit bank attestations; only AICTEOrg identity may submit review, clearance and release events. FastAPI still enforces human role permissions.
+Auditor
+Read-only application access to ledger queries; optional dedicated auditor peer/org only if time allows.
+11.3 Chaincode transactions
+Function
+Rules
+CreateInstrument
+AICTEOrg only. Require unique instrument UUID and unused HMAC fingerprint. Store minimal fields and emit InstrumentCreated event.
+RecordBankAttestation
+BankOrg only. Instrument must exist. Store attestation digest, normalized status, verification timestamp and event. Prevent arbitrary actor organization claims.
+RecordInstrumentEvent
+AICTEOrg or BankOrg according to event allow-list. Require valid event type and append lifecycle state.
+LinkReplacement
+AICTEOrg only. Both instruments must exist; no self-link or cycle; old instrument cannot be linked to itself; prevent duplicate current successor.
+RecordClearance
+AICTEOrg only. Store clearance type, outcome, evidence digest and release-case reference.
+AuthorizeRelease
+AICTEOrg only. Require release case marked ready by app, all configured mandatory clearance codes passed, fresh ACTIVE_LIEN_CONFIRMED bank attestation, and no blocking event. Record authorization event; do not transfer funds.
+GetInstrument
+Read current minimal on-chain state.
+GetInstrumentHistory
+Return Fabric transaction history for instrument key, including tx id and timestamps.
+11.4 Trust boundaries and limits
+Fabric verifies network identity and transaction endorsement. It cannot independently verify that a bank operator entered a truthful statement. The bank must check its own records before signing.
+For prototype, bank response is signed using a demo keypair and labelled synthetic. The public key is registered in demo configuration. Never use real bank credentials or keys.
+FastAPI must validate the bank signature, nonce, request ID and freshness before asking the Gateway to record its digest. Fabric then records the evidence event.
+The Gateway service must use separate organization credentials. Do not use a single all-powerful identity for both AICTE and BankOrg.
+If Fabric is offline, the main app may use a development-only append-only hash-chain adapter to remain runnable, but UI must clearly show “LOCAL AUDIT FALLBACK — NOT BLOCKCHAIN”. The final SIH blockchain demo must run with Fabric and show a Fabric transaction ID.
+11.5 Fabric setup references
+Use official Fabric documentation and fabric-samples. The official test network includes scripts for starting a local network, creating a channel and deploying chaincode. The Node Gateway client API supports submit/evaluate transactions against a Gateway-enabled peer. Prefer Fabric 2.5.x LTS for a stable prototype baseline unless the environment and sample dependencies are validated against another supported line.
+12. Bank sandbox design
+Create a distinct Bank Sandbox module to demonstrate the desired integration contract. It must be clearly separated from actual bank systems and use only synthetic records.
+12.1 Bank sandbox fixture records
+Demo FDR reference
+Expected bank response
+Purpose
+DEMO-FDR-1001
+ACTIVE_LIEN_CONFIRMED
+Happy path; amount/date/lien match.
+DEMO-FDR-1002
+ACTIVE_LIEN_MISMATCH
+Bank reports active instrument but lien beneficiary differs.
+DEMO-FDR-1003
+CLOSED_OR_ENCASHED
+Previously active instrument is now closed.
+DEMO-FDR-1004
+NOT_FOUND
+Instrument not found in bank sandbox.
+DEMO-FDR-1005
+MATURITY_MISMATCH
+Bank-confirmed maturity differs from submitted document.
+DEMO-FDR-1006
+ACTIVE_LIEN_CONFIRMED
+Use to demonstrate duplicate fingerprint across two synthetic institutions.
+12.2 Signed response format
+{
+  "request_id": "uuid",
+  "instrument_id": "uuid",
+  "bank_code": "DEMO-BANK",
+  "bank_reference": "DEMO-FDR-1001",
+  "amount_minor_units": 250000000,
+  "currency": "INR",
+  "maturity_date": "2028-10-31",
+  "instrument_status": "ACTIVE",
+  "lien_status": "CONFIRMED",
+  "lien_beneficiary_code": "AICTE-DEMO",
+  "verified_at": "2026-10-31T09:00:00Z",
+  "nonce": "one-time-request-nonce",
+  "key_id": "demo-bank-key-01",
+  "signature": "BASE64_SIGNATURE_OF_CANONICAL_PAYLOAD"
+}
+Sign canonical JSON excluding the signature field. Use an asymmetric signing algorithm supported by the selected library (for example RSA-PSS/SHA-256 or ECDSA/SHA-256). Document the exact canonicalization rules and test tampering. For this prototype the keypair is generated locally and is not an official bank certificate.
+12.3 Signature tests
+Valid signature + matching nonce → accepted.
+Payload modified after signing → rejected.
+Unknown key_id → rejected.
+Expired/consumed nonce → rejected.
+Wrong request_id or instrument_id → rejected.
+Valid signature but lien mismatch → attestation stored as negative result and high-priority discrepancy created.
+13. Frontend screens and interaction requirements
+Screen
+Required UI elements / behavior
+Login
+SecureFDR 360 wordmark; email/password; demo environment notice; demo role quick-login panel only in development.
+Role dashboard
+KPI cards; active instruments; expiring soon; pending verification; open discrepancies; pending release cases; recent activity; all data role-scoped.
+Institution instruments
+Search, filters, pagination; status badges for admin state and bank state separately; Add FDR button.
+Add FDR wizard
+Step 1 obligation and declared fields; Step 2 upload; Step 3 extracted field review; Step 4 confirm/submit. Save draft.
+Instrument detail / Digital Deposit Passport
+Summary, declared vs extracted vs bank-confirmed comparison, document viewer/download, discrepancy list, current states, linked replacement lineage, full timeline and ledger transaction reference.
+Bank verification console
+Request queue for bank; view allowed details; response selector with fixture data; confirm fields; sign and submit synthetic response.
+AICTE scrutiny workbench
+Queue, document preview, comparison panel, discrepancy reasons, notes, request clarification, request bank check, assign clearance tasks.
+Release case workspace
+Case state stepper; requirements checklist; clearance task table; latest bank attestation; policy evaluation reasons; Approve/Reject actions shown only to approver.
+Collateral intelligence
+Potential duplicate list; connected instruments/institutions; reason for flag; relationship details; reviewer disposition. Use simple graph visual or linked record table.
+Policy administration
+Version list; view/edit draft rules; effective dates; activate version with confirmation and reason. Use illustrative/demo policy banner.
+Audit & ledger explorer
+Search by instrument ID; display event timeline, tx IDs, block references if available, document digest, actor organization and timestamp; read-only.
+Notifications & reports
+In-app notifications; maturity report; verification aging; release pendency; export CSV only for authorized roles.
+13.1 Visual design direction
+Use a polished institutional fintech visual system: deep navy for navigation, white/off-white content surfaces, teal for verified/positive states, amber for pending/review and red only for blocking discrepancies.
+Use readable sans-serif typography, compact tables, clear status chips and generous whitespace. Keep forms simple and consistent.
+All list screens need loading, empty, error and success states. Use confirmation dialogs for destructive or approval actions.
+Use clear labels: “Submitted”, “Extracted by OCR”, “Bank Sandbox attestation” and “AICTE decision”. Never visually collapse these into one green verified badge.
+Provide desktop-first responsive layouts and support tablet/mobile widths without horizontal overflow.
+14. Notifications, dashboards and reporting
+14.1 Notification rules
+Trigger
+Recipient
+Action
+FDR submitted
+Institution user + AICTE review queue
+Submission receipt and new review task.
+Clarification requested
+Institution user
+In-app alert with fields/documents requiring attention.
+Bank verification requested
+Bank verifier group
+New verification queue item.
+Bank discrepancy returned
+AICTE reviewer + institution user where applicable
+High-priority alert with reason; institution cannot edit bank evidence.
+Maturity approaching
+Institution user + assigned reviewer
+Configurable 90/60/30/7 day reminders.
+Maturity passed / stale bank status
+Institution user + AICTE reviewer
+Overdue/refresh status task.
+Clearance task pending
+Assigned clearance owner + reviewer
+Pending task and escalation after configurable interval.
+Release decision recorded
+Institution user + reviewer
+Decision and reason notification.
+14.2 Dashboard KPIs
+Total instruments by administrative status.
+Bank-confirmed vs pending vs negative/stale attestations.
+Maturing in 7 / 30 / 60 / 90 days.
+Open discrepancies by severity and age.
+Release cases by workflow stage.
+Average verification turnaround (submission to bank response).
+Clearance aging by authority/unit.
+Potential duplicate/collateral conflicts.
+Dashboard numbers must be computed from backend queries. Do not hardcode KPI totals in frontend components.
+15. Security, privacy and reliability requirements
+15.1 Required prototype controls
+Hash passwords using Argon2id or a maintained secure password hashing library. Never store plain-text passwords.
+Use short-lived JWT access tokens and protect signing secrets via environment variables. Do not put secrets in source control.
+Enforce role and organization checks on backend routes and database queries.
+Validate uploads by extension, MIME type and file signature; set limits; store files outside public static paths.
+Use parameterized database access through SQLAlchemy; validate all user input with Pydantic schemas.
+Use CORS allow-list for local frontend origin; do not use wildcard with credentials.
+Add CSRF protections if using cookies; otherwise keep token storage risk understood and avoid localStorage if a safer auth design is implemented.
+Log authentication events, denied access, file access, approval decisions and important status changes. Do not log passwords, tokens, signatures or unnecessary personal/financial data.
+Use TLS in any shared deployment; local localhost can be plain HTTP only for development.
+Protect append-only audit and ledger event endpoints from update/delete operations.
+Use database backups or export seed/reset for demo recovery. Handle network failures gracefully.
+Include a security checklist inspired by OWASP ASVS and Government of India website/app security guidelines.
+15.2 Threats to handle in tests
+Threat / failure
+Required behavior
+Institution requests another institution’s instrument by guessing UUID
+403 or 404; no data leakage.
+Bank user requests unrelated bank verification request
+403 or 404.
+Unsupported/oversized upload
+400/413; no file saved.
+MIME spoof or malformed file
+Reject safely; do not crash parser.
+Altered file bytes after upload
+Hash mismatch alert.
+Forged bank signature
+Reject; do not create positive bank status.
+Replay of old bank response
+Reject stale/used nonce.
+Duplicate instrument fingerprint
+Flag conflict; do not silently create a second active instrument.
+Release requested with open clearance
+Cannot enter READY_FOR_APPROVAL.
+Release requested with stale/negative bank status
+Cannot enter READY_FOR_APPROVAL.
+Unauthorized approval action
+403; audit denied access event.
+Fabric unavailable
+Show ledger unavailable/fallback mode; never claim Fabric transaction committed.
+16. Step-by-step implementation plan for Antigravity
+Follow the phases in order. At the end of each phase, run the application and automated tests. Do not create all files in one unverified generation step. Keep a progress checklist in docs/BUILD_PROGRESS.md and update it when a phase passes.
+Phase 0 — Workspace inspection and planning
+1. Inspect the current workspace, OS, available runtimes, Docker availability and existing repository files. Do not overwrite existing work without inspecting it.
+2. Confirm Python, Node, npm, Docker Engine/Desktop and Git availability. Check whether a Fabric test network can run on the machine.
+3. Create docs/BUILD_PROGRESS.md with all phases and checkboxes. Record constraints and decisions.
+4. Create a concise architecture note and repository tree before implementation.
+Phase 1 — Scaffold the application
+1. Create frontend React + TypeScript + Vite project and backend FastAPI project in the agreed monorepo structure.
+2. Add environment configuration via .env.example; implement typed settings loading; fail clearly when required values are missing.
+3. Add PostgreSQL Docker Compose service and health check. Add backend health endpoint GET /api/v1/health.
+4. Add frontend shell with sidebar, top navigation, routing, error boundary and a basic login page.
+5. Add a README with initial local start commands. Confirm frontend and backend both run before moving on.
+Phase 2 — Database, authentication and RBAC
+1. Implement SQLAlchemy models and Alembic initial migration for users, institutions and banks.
+2. Implement login, password hashing, JWT and GET /auth/me.
+3. Implement backend permission dependencies: require_role, require_permission and organization scope enforcement.
+4. Create synthetic seed users, institutions, banks and obligations. Include a documented demo login page/panel.
+5. Write tests for successful login, invalid password, inactive user and cross-institution access denial.
+Phase 3 — Instrument repository and Digital Deposit Passport
+1. Implement deposit_obligations, instruments, documents, relationships and audit_logs models/migrations.
+2. Implement draft creation, submit, list/filter/detail endpoints and frontend instrument list.
+3. Implement secure document upload/download, file checks, random storage keys and SHA-256.
+4. Create Digital Deposit Passport detail screen with metadata, evidence tabs, dual status fields and event timeline.
+5. Add seeded instrument fixtures with different maturity dates and statuses. Verify all data survives server restart.
+Phase 4 — OCR and discrepancy engine
+1. Build document extraction service: PyMuPDF text extraction first, OCR fallback only when required.
+2. Implement extractors for FDR reference, bank, IFSC/branch, amount, issue date, maturity date, depositor and lien beneficiary where present.
+3. Save extracted values, confidence and parser version. Do not assume fields exist on every format.
+4. Build comparison service for declared vs extracted fields and create discrepancy records.
+5. Build UI to display original document side-by-side with extracted field values, confidence and editable reviewer correction.
+6. Test clean sample, amount mismatch, date mismatch, low confidence and scanned PDF cases.
+Phase 5 — Bank Verification Sandbox
+1. Create bank_verification_requests and bank_attestations models and API endpoints.
+2. Build Bank Verification Console restricted to the user’s bank.
+3. Create synthetic bank instrument fixture dataset with all response outcomes listed in Section 12.
+4. Implement canonical payload signing and verification using a local development keypair; store key_id and signature result.
+5. Implement nonce uniqueness, expiry and replay prevention.
+6. On valid bank response, update bank status, compare values, generate discrepancy records and append audit event.
+7. Display permanent “Bank Sandbox — simulated” label next to these results.
+Phase 6 — Hyperledger Fabric network and chaincode
+1. Clone or obtain official fabric-samples in a separate fabric workspace; follow the official test-network prerequisites.
+2. Start a local test network with two organizations and create the securefdr-channel. Keep setup scripts repeatable.
+3. Create JavaScript chaincode for securefdr with functions in Section 11.3.
+4. Deploy chaincode to the channel using the supported test-network deploy script. Validate duplicate registration and MSP authorization behavior.
+5. Create gateway-service in Node.js/TypeScript using @hyperledger/fabric-gateway. Load org identity material from local Fabric crypto configuration; never commit private keys.
+6. Expose internal REST operations for submit/evaluate transactions and history query. Protect this service; it should not be directly exposed to the public frontend.
+7. Create FastAPI LedgerService interface and Fabric adapter. Persist tx_id, block/event reference and payload digest in ledger_events.
+8. Add health/status endpoint showing FABRIC_CONNECTED or LOCAL_AUDIT_FALLBACK. Test an actual transaction and retrieve its history.
+Phase 7 — Duplicate detection and instrument lineage
+1. Implement server-side HMAC fingerprint generation using normalized bank code and normalized FDR reference plus additional stable fields as needed.
+2. Check fingerprint uniqueness before creating/accepting instrument. If collision exists, create a potential duplicate discrepancy and show related institution/instrument to authorized reviewer.
+3. Implement replacement linking endpoint and UI; prevent self-links, cycles and duplicate active successors.
+4. Write CreateInstrument/LinkReplacement events to Fabric; show transaction references in the passport timeline.
+5. Test same FDR submitted by two synthetic institutions and replacement of an old FDR by a new one.
+Phase 8 — Policy engine, clearances and release workflow
+1. Implement versioned policy_versions and policy_rules. Seed illustrative demo rules only and show “Demo policy — validate against current AICTE instructions” banner.
+2. Implement rule evaluation returning PASS/FAIL/NEEDS_HUMAN_REVIEW per check with explanation and exact policy version.
+3. Build release case creation, document upload, submission and status transitions.
+4. Build configurable clearance task creation and completion; use separate task rows for each clearance authority.
+5. Enforce maker-checker-approver separation. Institution submitter cannot approve. Reviewer cannot use approver endpoint unless separately authorized.
+6. Before READY_FOR_APPROVAL require mandatory clearances complete and a fresh bank attestation with acceptable active/lien-confirmed status.
+7. Approver enters explicit decision and reason. Record to DB, audit log and Fabric. No funds transfer or automated legal decision.
+Phase 9 — Alerts, dashboard and reports
+1. Add idempotent scheduled task for maturity offsets, overdue instruments, stale attestations and aged pending clearances.
+2. Add in-app notification center with read/unread state.
+3. Implement role-specific dashboard metrics using real database queries.
+4. Implement filters and CSV export for authorized reports. Avoid exporting sensitive fields by default.
+5. Test time travel by seeding records with maturity dates 90/30/7 days away and one overdue.
+Phase 10 — Polish, security, tests and demo readiness
+1. Complete responsive UI, empty/loading/error states, toasts, confirmation dialogs and clear status labels.
+2. Run backend tests, frontend tests, Fabric chaincode tests and Playwright end-to-end tests.
+3. Run security checks from Section 15 and fix failures.
+4. Add complete README, architecture, API, demo script, troubleshooting and reset instructions.
+5. Run the full demo from a clean start using only README instructions. Record known limitations in docs/LIMITATIONS.md.
+6. Do not mark the project complete until all acceptance criteria in Section 17 pass.
+17. Required end-to-end demo scenarios
+Demo
+Steps
+Expected result
+A. Happy-path FDR
+Institution submits synthetic FDR → OCR extracts fields → reviewer requests bank verification → bank sandbox signs ACTIVE + lien confirmed response.
+Passport shows declared/extracted/bank-confirmed values, signed sandbox attestation, Fabric tx ID and accepted record state.
+B. Altered/mismatched values
+Submit form amount ₹25 lakh while sample document or bank fixture reports ₹20 lakh.
+AMOUNT_MISMATCH appears with sources and values; record requires reviewer attention.
+C. Duplicate collateral
+Submit same synthetic FDR fingerprint under two institution profiles.
+Second record is flagged as potential duplicate and related record is visible to authorized reviewer.
+D. Premature closure
+Initially confirm active FDR, then submit bank sandbox status CLOSED_OR_ENCASHED.
+Bank status updates, CRITICAL discrepancy appears, audit/ledger event recorded, release is blocked.
+E. Replacement
+Create original instrument, submit replacement, verify new instrument and link both.
+Old record preserved as SUPERSEDED after acceptance; new record current; lineage visible.
+F. Release blocked
+Institution submits release with a required clearance pending or stale bank status.
+Case cannot become READY_FOR_APPROVAL; missing gate and reason are displayed.
+G. Release approved
+Complete configured clearances, fresh bank verification, reviewer evaluation, approver signs off.
+Release authorization is recorded with user, reason, evidence digest and Fabric transaction. No money transfer is simulated.
+H. Ledger integrity
+Modify a local copy of an uploaded document or tamper with bank response before signature verification.
+Hash/signature mismatch is shown; valid ledger history remains unchanged.
+18. Definition of done / final acceptance checklist
+☐ Application can be started from documented commands after a clean checkout.
+☐ All six roles can log in with demo credentials and see role-appropriate navigation.
+☐ Backend enforces user role and institution/bank scoping.
+☐ Institution can create an instrument, upload a document and submit it.
+☐ OCR extraction and field-confidence display work for provided sample documents.
+☐ Declared vs extracted vs bank-confirmed values are separately displayed.
+☐ Known mismatch fixtures generate the expected discrepancy codes.
+☐ Bank sandbox supports signed positive and negative responses; tampered signatures and replayed nonce are rejected.
+☐ Fabric test network can be started; chaincode deployed; at least one instrument event and one bank attestation event are committed and queried from ledger.
+☐ UI accurately identifies Fabric-connected vs fallback audit mode.
+☐ Duplicate collateral detection works across two synthetic institutions.
+☐ Replacement instrument relationship is visible and history is preserved.
+☐ Release cases cannot bypass mandatory demo clearances or fresh bank verification.
+☐ Only authorized approver can approve/reject a ready case; decision reason is mandatory.
+☐ Maturity reminders and notifications work with seeded test dates.
+☐ Auditor can inspect history but cannot modify any record.
+☐ All key endpoints and services have automated tests; at least the critical end-to-end scenarios are covered.
+☐ No secrets, private keys, real financial data or production credentials are committed.
+☐ README, .env.example, seed/reset scripts, architecture/API notes and limitations are complete.
+19. Sample environment variables
+# Backend
+APP_ENV=development
+APP_NAME=SecureFDR 360
+API_V1_PREFIX=/api/v1
+SECRET_KEY=replace-with-local-random-secret
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+DATABASE_URL=postgresql+psycopg://securefdr:securefdr@localhost:5432/securefdr
+UPLOAD_DIR=./storage/uploads
+MAX_UPLOAD_MB=10
+HMAC_FINGERPRINT_SECRET=replace-with-local-random-secret
+BANK_DEMO_PRIVATE_KEY_PATH=./secrets/demo-bank-private.pem
+BANK_DEMO_PUBLIC_KEY_PATH=./secrets/demo-bank-public.pem
+BANK_ATTESTATION_MAX_AGE_HOURS=24
+MATURITY_REMINDER_DAYS=90,60,30,7
+# Fabric adapter
+LEDGER_MODE=fabric                 # fabric or local_hash_chain
+FABRIC_GATEWAY_URL=http://localhost:4100
+FABRIC_CHANNEL=securefdr-channel
+FABRIC_CHAINCODE=securefdr
+FABRIC_AICTE_MSP_ID=AICTEOrgMSP
+FABRIC_BANK_MSP_ID=BankOrgMSP
+# Frontend
+VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_APP_ENV=development
+Secrets hygiene
+The .env file, private keys, wallet identities, uploaded demo files and database volumes must be excluded in .gitignore. Commit only .env.example and non-sensitive test fixtures.
+20. README run commands (target state)
+Antigravity must adapt these commands to the actual implementation and verify them. This is the expected developer experience after completion.
+# 1. Configure environment
+cp .env.example .env
+# Edit local secrets and database configuration.
+# 2. Start database and optional dependencies
+docker compose up -d postgres redis
+# 3. Backend
+cd backend
+python -m venv .venv
+# Activate venv, then:
+pip install -r requirements.txt
+alembic upgrade head
+python -m app.seed_demo
+uvicorn app.main:app --reload --port 8000
+# 4. Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+# 5. Fabric (separate terminal; after prerequisites are installed)
+cd fabric/test-network
+./network.sh up createChannel -c securefdr-channel
+./network.sh deployCC -ccn securefdr -ccp ../chaincode/securefdr -ccl javascript
+# 6. Start Fabric Gateway service
+cd fabric/gateway-service
+npm install
+npm run dev
+# 7. Test
+cd backend && pytest
+cd frontend && npm test
+# Run the documented Playwright e2e command.
+On Windows PowerShell, provide equivalent scripts. Fabric test-network scripts are shell-based; Antigravity should document Docker/WSL2 requirements for Windows rather than pretending these commands work natively in every shell.
+21. Ready-to-paste master instruction for Antigravity
+Copy this instruction together with the complete specification
+You are the lead full-stack engineer for SecureFDR 360, SIH Problem Statement 26265. Read the attached “SecureFDR 360 Prototype Development Specification” completely before coding. Inspect the workspace and existing files first. Implement the application phase by phase in the exact order in Section 16. Do not stop after producing a plan, wireframe or mockup: build a working React + TypeScript frontend, FastAPI backend, PostgreSQL persistence, OCR pipeline, bank verification sandbox with cryptographic signature checks, Hyperledger Fabric test-network integration through a Node.js/TypeScript Gateway service, chaincode, duplicate detection, policy/release workflow, notifications, tests and README. Keep all demo data synthetic and label the Bank Sandbox as simulated. Do not claim live AICTE/bank integration. Do not write personal or financial details to blockchain. Enforce role and organization scope in the backend. Run migrations and tests after each phase, fix failures before proceeding, and update docs/BUILD_PROGRESS.md. If a dependency or environment capability is unavailable, implement a clearly labelled adapter/fallback and document the exact blocker; do not silently fake a successful Fabric transaction. At completion, start the application from a clean environment and run all end-to-end demo scenarios and the definition-of-done checklist. Provide a concise completion report with implemented features, run commands, test results, demo users and known limitations.
+22. Technical references
+Use the following official documentation as implementation references. Check compatibility against the selected local toolchain before pinning dependency versions. These references inform the technology approach; they do not imply that AICTE or any bank has approved an integration.
+Hyperledger Fabric releases
+https://github.com/hyperledger/fabric/releases
+Review supported release lines; Fabric 2.5.x is documented as an LTS line while 3.1 releases are also available.
+Hyperledger Fabric security model
+https://github.com/hyperledger/fabric/blob/main/docs/source/security_model.md
+Permissioned identities, certificates, MSPs and policy-based authorization.
+Fabric private data
+https://hyperledger-fabric.readthedocs.io/en/latest/private-data/private-data.html
+Private data collections for information restricted to authorized organizations.
+Fabric test network
+https://hyperledger-fabric.readthedocs.io/en/latest/test_network.html
+Local development network, channels and chaincode deployment.
+Fabric chaincode deployment
+https://hyperledger-fabric.readthedocs.io/en/latest/deploy_chaincode.html
+Chaincode lifecycle and organization agreement.
+Fabric Gateway Node API
+https://hyperledger.github.io/fabric-gateway/main/api/node/
+Node client API for submitting/evaluating transactions.
+Fabric Gateway npm package
+https://www.npmjs.com/package/@hyperledger/fabric-gateway
+Package and compatibility information; verify at implementation time.
+Vite guide
+https://vite.dev/guide/
+Frontend development server and build tool.
+OWASP ASVS
+https://asvs.owasp.org/
+Security verification requirements for web applications and services.
+Guidelines for Indian Government Websites and Apps — Security
+https://guidelines.india.gov.in/security-guidelines-and-attributes/
+Government website/app security considerations including input validation, access control, cryptography, logging and data protection.
+Appendix A — Scope and prototype disclaimer
+This is a software prototype specification for SIH demonstration. All institutions, users, FDR numbers, bank names, attestations, cryptographic keys, maturity dates, policy parameters and workflow outcomes used in demo data must be synthetic. A successful simulated bank attestation is not a real bank confirmation. A ledger transaction proves that an authenticated organization recorded an event under the prototype network; it does not independently prove the truth of underlying financial facts. A real deployment requires AICTE approval, applicable legal/policy validation, bank agreements, security assessment, privacy review, operational governance and production-grade identity/key management.
+Final principle
+SecureFDR 360 is successful when it can show the difference between (1) what the institution declared, (2) what the document appears to contain, (3) what the bank sandbox independently attested, and (4) what AICTE authorized after applying the configured rules. Preserve these four evidence layers in every major screen and workflow.
